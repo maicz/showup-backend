@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" id="Definitions_group_service" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.2.0" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="2.0.0">
+  <bpmn:collaboration id="Collaboration_group_service">
+    <bpmn:participant id="group-service-participant" name="group-service" processRef="group-lifecycle-process" />
+  </bpmn:collaboration>
+  <bpmn:process id="group-lifecycle-process" name="group-lifecycle-process" isExecutable="true" camunda:historyTimeToLive="90">
+    <bpmn:startEvent id="start_event" name="Group Created">
+      <bpmn:outgoing>flow1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="flow1" sourceRef="start_event" targetRef="service_task_1" />
+    <bpmn:serviceTask id="service_task_1" name="Manage Group" camunda:delegateExpression="${manageGroupDelegate}">
+      <bpmn:incoming>flow1</bpmn:incoming>
+      <bpmn:outgoing>flow_to_approval_gw</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="flow_to_approval_gw" sourceRef="service_task_1" targetRef="gateway_approval" />
+    
+    <bpmn:exclusiveGateway id="gateway_approval" name="Is Approved?" default="flow_rejected">
+      <bpmn:incoming>flow_to_approval_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_approved</bpmn:outgoing>
+      <bpmn:outgoing>flow_rejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="flow_approved" name="Approved" sourceRef="gateway_approval" targetRef="task_process_activation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isApproved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:serviceTask id="task_process_activation" name="Process Group Activation" camunda:delegateExpression="${processGroupActivationDelegate}">
+      <bpmn:incoming>flow_approved</bpmn:incoming>
+      <bpmn:outgoing>flow_to_tier_gw</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="flow_to_tier_gw" sourceRef="task_process_activation" targetRef="gateway_tier" />
+    
+    <bpmn:exclusiveGateway id="gateway_tier" name="Group Tier?" default="flow_standard">
+      <bpmn:incoming>flow_to_tier_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_premium</bpmn:outgoing>
+      <bpmn:outgoing>flow_standard</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="flow_premium" name="Premium" sourceRef="gateway_tier" targetRef="task_configure_premium">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${groupTier == 'PREMIUM'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:serviceTask id="task_configure_premium" name="Configure Premium Features" camunda:delegateExpression="${configurePremiumFeaturesDelegate}">
+      <bpmn:incoming>flow_premium</bpmn:incoming>
+      <bpmn:outgoing>flow_premium_to_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="flow_standard" name="Standard" sourceRef="gateway_tier" targetRef="task_configure_standard" />
+    
+    <bpmn:serviceTask id="task_configure_standard" name="Configure Standard Features" camunda:delegateExpression="${configureStandardFeaturesDelegate}">
+      <bpmn:incoming>flow_standard</bpmn:incoming>
+      <bpmn:outgoing>flow_standard_to_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="flow_rejected" name="Rejected" sourceRef="gateway_approval" targetRef="task_reject_group" />
+    
+    <bpmn:serviceTask id="task_reject_group" name="Reject Group Creation" camunda:delegateExpression="${rejectGroupDelegate}">
+      <bpmn:incoming>flow_rejected</bpmn:incoming>
+      <bpmn:outgoing>flow_rejected_to_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="flow_rejected_to_end" sourceRef="task_reject_group" targetRef="end_event" />
+    <bpmn:sequenceFlow id="flow_premium_to_end" sourceRef="task_configure_premium" targetRef="end_event" />
+    <bpmn:sequenceFlow id="flow_standard_to_end" sourceRef="task_configure_standard" targetRef="end_event" />
+    
+    <bpmn:endEvent id="end_event" name="Group Processed">
+      <bpmn:incoming>flow_rejected_to_end</bpmn:incoming>
+      <bpmn:incoming>flow_premium_to_end</bpmn:incoming>
+      <bpmn:incoming>flow_standard_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_group_service">
+      <bpmndi:BPMNShape id="Participant_group_di" bpmnElement="group-service-participant" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="900" height="400" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_di" bpmnElement="start_event">
+        <dc:Bounds x="210" y="260" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_di" bpmnElement="service_task_1">
+        <dc:Bounds x="300" y="238" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_approval_di" bpmnElement="gateway_approval" isMarkerVisible="true">
+        <dc:Bounds x="450" y="253" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_process_activation_di" bpmnElement="task_process_activation">
+        <dc:Bounds x="550" y="238" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_tier_di" bpmnElement="gateway_tier" isMarkerVisible="true">
+        <dc:Bounds x="700" y="253" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_configure_premium_di" bpmnElement="task_configure_premium">
+        <dc:Bounds x="800" y="140" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_configure_standard_di" bpmnElement="task_configure_standard">
+        <dc:Bounds x="800" y="340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_reject_group_di" bpmnElement="task_reject_group">
+        <dc:Bounds x="550" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_di" bpmnElement="end_event">
+        <dc:Bounds x="982" y="260" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow1_di" bpmnElement="flow1">
+        <di:waypoint x="246" y="278" />
+        <di:waypoint x="300" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_to_approval_gw_di" bpmnElement="flow_to_approval_gw">
+        <di:waypoint x="400" y="278" />
+        <di:waypoint x="450" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_approved_di" bpmnElement="flow_approved">
+        <di:waypoint x="500" y="278" />
+        <di:waypoint x="550" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_to_tier_gw_di" bpmnElement="flow_to_tier_gw">
+        <di:waypoint x="650" y="278" />
+        <di:waypoint x="700" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_premium_di" bpmnElement="flow_premium">
+        <di:waypoint x="725" y="253" />
+        <di:waypoint x="725" y="180" />
+        <di:waypoint x="800" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_standard_di" bpmnElement="flow_standard">
+        <di:waypoint x="725" y="303" />
+        <di:waypoint x="725" y="380" />
+        <di:waypoint x="800" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_rejected_di" bpmnElement="flow_rejected">
+        <di:waypoint x="475" y="253" />
+        <di:waypoint x="475" y="140" />
+        <di:waypoint x="550" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_rejected_to_end_di" bpmnElement="flow_rejected_to_end">
+        <di:waypoint x="650" y="140" />
+        <di:waypoint x="1000" y="140" />
+        <di:waypoint x="1000" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_premium_to_end_di" bpmnElement="flow_premium_to_end">
+        <di:waypoint x="900" y="180" />
+        <di:waypoint x="1000" y="180" />
+        <di:waypoint x="1000" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_standard_to_end_di" bpmnElement="flow_standard_to_end">
+        <di:waypoint x="900" y="380" />
+        <di:waypoint x="1000" y="380" />
+        <di:waypoint x="1000" y="278" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

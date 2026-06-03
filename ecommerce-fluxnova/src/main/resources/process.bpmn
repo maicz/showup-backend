@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" id="Definitions_0yg68rr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.2.0" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="2.0.0">
+  <bpmn:collaboration id="Collaboration_1972gfm">
+    <bpmn:participant id="ecommerce-sandbox-participant" name="ecommerce-sandbox" processRef="ecommerce-sandbox-process" />
+  </bpmn:collaboration>
+  <bpmn:process id="ecommerce-sandbox-process" name="ecommerce-sandbox-process" isExecutable="true" camunda:historyTimeToLive="90">
+    <bpmn:startEvent id="start_event" name="start" camunda:asyncBefore="true">
+      <bpmn:outgoing>start-get_client_data</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="start-get_client_data" sourceRef="start_event" targetRef="get_client_data">
+      <bpmn:extensionElements>
+        <camunda:executionListener delegateExpression="${generateClientIdDelegate}" event="take" />
+      </bpmn:extensionElements>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="get_client_data" name="get client data" camunda:delegateExpression="${getClientDataDelegate}">
+      <bpmn:incoming>start-get_client_data</bpmn:incoming>
+      <bpmn:outgoing>get_client_data-check_balance</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="get_client_data-check_balance" sourceRef="get_client_data" targetRef="check_balance" />
+    <bpmn:serviceTask id="check_balance" name="check balance" camunda:delegateExpression="${checkBalanceDelegate}">
+      <bpmn:incoming>get_client_data-check_balance</bpmn:incoming>
+      <bpmn:outgoing>Flow_0jqvkoc</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0jqvkoc" sourceRef="check_balance" targetRef="cancel_or_proceed" />
+    <bpmn:exclusiveGateway id="cancel_or_proceed" name="cancel or proceed" default="cancel-cancel_order">
+      <bpmn:incoming>Flow_0jqvkoc</bpmn:incoming>
+      <bpmn:outgoing>cancel-cancel_order</bpmn:outgoing>
+      <bpmn:outgoing>cancel_or_proceed-G1</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="cancel-cancel_order" sourceRef="cancel_or_proceed" targetRef="cancel_order" />
+    <bpmn:sequenceFlow id="cancel_or_proceed-G1" sourceRef="cancel_or_proceed" targetRef="G1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${balance &gt; 500}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="cancel_order" name="cancel order" camunda:delegateExpression="${cancelOrderDelegate}">
+      <bpmn:incoming>cancel-cancel_order</bpmn:incoming>
+      <bpmn:outgoing>cancel_order-archive_order</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:parallelGateway id="G1" name="G1">
+      <bpmn:incoming>cancel_or_proceed-G1</bpmn:incoming>
+      <bpmn:outgoing>G1-make_payment</bpmn:outgoing>
+      <bpmn:outgoing>G1-place_order</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="G1-make_payment" sourceRef="G1" targetRef="make_payment" />
+    <bpmn:sequenceFlow id="G1-place_order" sourceRef="G1" targetRef="place_order" />
+    <bpmn:serviceTask id="make_payment" name="make payment" camunda:delegateExpression="${makePaymentDelegate}">
+      <bpmn:incoming>G1-make_payment</bpmn:incoming>
+      <bpmn:outgoing>make_payment-G</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="place_order" name="place order" camunda:delegateExpression="${placeOrderDelegate}">
+      <bpmn:incoming>G1-place_order</bpmn:incoming>
+      <bpmn:outgoing>place_order-G2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="make_payment-G" sourceRef="make_payment" targetRef="G2" />
+    <bpmn:sequenceFlow id="place_order-G2" sourceRef="place_order" targetRef="G2" />
+    <bpmn:parallelGateway id="G2" name="G2">
+      <bpmn:incoming>make_payment-G</bpmn:incoming>
+      <bpmn:incoming>place_order-G2</bpmn:incoming>
+      <bpmn:outgoing>G2-archive_order</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="G2-archive_order" sourceRef="G2" targetRef="archive_order" />
+    <bpmn:serviceTask id="archive_order" name="archive order" camunda:delegateExpression="${archiveOrderDelegate}">
+      <bpmn:incoming>G2-archive_order</bpmn:incoming>
+      <bpmn:incoming>cancel_order-archive_order</bpmn:incoming>
+      <bpmn:outgoing>archive_order-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="cancel_order-archive_order" sourceRef="cancel_order" targetRef="archive_order" />
+    <bpmn:sequenceFlow id="archive_order-end" sourceRef="archive_order" targetRef="end" />
+    <bpmn:endEvent id="end" name="end" camunda:asyncBefore="true">
+      <bpmn:incoming>archive_order-end</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1972gfm">
+      <bpmndi:BPMNShape id="Participant_1m5hp25_di" bpmnElement="ecommerce-sandbox-participant" isHorizontal="true">
+        <dc:Bounds x="160" y="60" width="1220" height="380" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="start_event">
+        <dc:Bounds x="212" y="232" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="220" y="275" width="22" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1f855jj_di" bpmnElement="get_client_data">
+        <dc:Bounds x="300" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0dw6zz2_di" bpmnElement="check_balance">
+        <dc:Bounds x="460" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1sh9j3d_di" bpmnElement="cancel_or_proceed" isMarkerVisible="true">
+        <dc:Bounds x="615" y="225" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="597" y="195" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1oazeb3_di" bpmnElement="cancel_order">
+        <dc:Bounds x="820" y="340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1944ln2_di" bpmnElement="G1">
+        <dc:Bounds x="725" y="225" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="743" y="282" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0xinvrd_di" bpmnElement="make_payment">
+        <dc:Bounds x="820" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_07zvvhc_di" bpmnElement="place_order">
+        <dc:Bounds x="820" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0bur7mk" bpmnElement="G2">
+        <dc:Bounds x="995" y="225" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1042" y="213" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0g07sib_di" bpmnElement="archive_order">
+        <dc:Bounds x="1130" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1tomyyu_di" bpmnElement="end">
+        <dc:Bounds x="1322" y="232" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1331" y="275" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0f1m4km_di" bpmnElement="start-get_client_data">
+        <di:waypoint x="248" y="250" />
+        <di:waypoint x="300" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1rk7zq5_di" bpmnElement="get_client_data-check_balance">
+        <di:waypoint x="400" y="250" />
+        <di:waypoint x="460" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0jqvkoc_di" bpmnElement="Flow_0jqvkoc">
+        <di:waypoint x="560" y="250" />
+        <di:waypoint x="615" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1qo19kp_di" bpmnElement="cancel-cancel_order">
+        <di:waypoint x="640" y="275" />
+        <di:waypoint x="640" y="380" />
+        <di:waypoint x="820" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0h4w8wk_di" bpmnElement="cancel_or_proceed-G1">
+        <di:waypoint x="665" y="250" />
+        <di:waypoint x="725" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1mxgyp1_di" bpmnElement="G1-make_payment">
+        <di:waypoint x="775" y="250" />
+        <di:waypoint x="820" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1upbehq_di" bpmnElement="G1-place_order">
+        <di:waypoint x="750" y="225" />
+        <di:waypoint x="750" y="120" />
+        <di:waypoint x="820" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18gi1ns_di" bpmnElement="make_payment-G">
+        <di:waypoint x="920" y="250" />
+        <di:waypoint x="995" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_01m6yl0_di" bpmnElement="place_order-G2">
+        <di:waypoint x="920" y="120" />
+        <di:waypoint x="1020" y="120" />
+        <di:waypoint x="1020" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vltcnq_di" bpmnElement="G2-archive_order">
+        <di:waypoint x="1045" y="250" />
+        <di:waypoint x="1130" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0o9a735_di" bpmnElement="cancel_order-archive_order">
+        <di:waypoint x="920" y="380" />
+        <di:waypoint x="1180" y="380" />
+        <di:waypoint x="1180" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0inpjy2_di" bpmnElement="archive_order-end">
+        <di:waypoint x="1230" y="250" />
+        <di:waypoint x="1322" y="250" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

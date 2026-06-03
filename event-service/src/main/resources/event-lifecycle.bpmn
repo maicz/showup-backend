@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" id="Definitions_event_service" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.2.0" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="2.0.0">
+  <bpmn:collaboration id="Collaboration_event_service">
+    <bpmn:participant id="event-service-participant" name="event-service" processRef="event-service-process" />
+  </bpmn:collaboration>
+  <bpmn:process id="event-service-process" name="event-service-process" isExecutable="true" camunda:historyTimeToLive="90">
+    <bpmn:startEvent id="start_event" name="Event Created">
+      <bpmn:outgoing>flow1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="flow1" sourceRef="start_event" targetRef="service_task_1" />
+    <bpmn:serviceTask id="service_task_1" name="Process Event Metadata" camunda:delegateExpression="${processEventDelegate}">
+      <bpmn:incoming>flow1</bpmn:incoming>
+      <bpmn:outgoing>flow_to_gateway1</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="gateway_validation" name="Is Event Valid?" default="flow_invalid">
+      <bpmn:incoming>flow_to_gateway1</bpmn:incoming>
+      <bpmn:outgoing>flow_valid</bpmn:outgoing>
+      <bpmn:outgoing>flow_invalid</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="flow_valid" name="Valid" sourceRef="gateway_validation" targetRef="task_validate_event">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isValid == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="task_validate_event" name="Verify Event Permissions" camunda:delegateExpression="${verifyEventPermissionsDelegate}">
+      <bpmn:incoming>flow_valid</bpmn:incoming>
+      <bpmn:outgoing>flow_to_gateway2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="gateway_type" name="Event Type?" default="flow_public">
+      <bpmn:incoming>flow_to_gateway2</bpmn:incoming>
+      <bpmn:outgoing>flow_private</bpmn:outgoing>
+      <bpmn:outgoing>flow_public</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="flow_private" name="Private" sourceRef="gateway_type" targetRef="task_setup_privacy">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${eventType == 'PRIVATE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="task_setup_privacy" name="Setup Private Access" camunda:delegateExpression="${setupPrivateAccessDelegate}">
+      <bpmn:incoming>flow_private</bpmn:incoming>
+      <bpmn:outgoing>flow_private_to_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_public" name="Public" sourceRef="gateway_type" targetRef="task_publish_event" />
+    <bpmn:serviceTask id="task_publish_event" name="Publish Public Event" camunda:delegateExpression="${publishPublicEventDelegate}">
+      <bpmn:incoming>flow_public</bpmn:incoming>
+      <bpmn:outgoing>flow_public_to_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_invalid" name="Invalid" sourceRef="gateway_validation" targetRef="end_event" />
+    <bpmn:sequenceFlow id="flow_private_to_end" sourceRef="task_setup_privacy" targetRef="end_event" />
+    <bpmn:sequenceFlow id="flow_public_to_end" sourceRef="task_publish_event" targetRef="end_event" />
+    <bpmn:sequenceFlow id="flow_to_gateway1" sourceRef="service_task_1" targetRef="gateway_validation" />
+    <bpmn:sequenceFlow id="flow_to_gateway2" sourceRef="task_validate_event" targetRef="gateway_type" />
+    <bpmn:endEvent id="end_event" name="Event Processed">
+      <bpmn:incoming>flow_invalid</bpmn:incoming>
+      <bpmn:incoming>flow_private_to_end</bpmn:incoming>
+      <bpmn:incoming>flow_public_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_event_service">
+      <bpmndi:BPMNShape id="Participant_event_di" bpmnElement="event-service-participant" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="900" height="400" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_di" bpmnElement="start_event">
+        <dc:Bounds x="210" y="260" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="193" y="303" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_di" bpmnElement="service_task_1">
+        <dc:Bounds x="300" y="238" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_validation_di" bpmnElement="gateway_validation" isMarkerVisible="true">
+        <dc:Bounds x="450" y="253" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="439" y="310" width="73" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_validate_event_di" bpmnElement="task_validate_event">
+        <dc:Bounds x="550" y="238" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_type_di" bpmnElement="gateway_type" isMarkerVisible="true">
+        <dc:Bounds x="700" y="253" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="694" y="310" width="62" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_setup_privacy_di" bpmnElement="task_setup_privacy">
+        <dc:Bounds x="800" y="140" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_publish_event_di" bpmnElement="task_publish_event">
+        <dc:Bounds x="800" y="340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_di" bpmnElement="end_event">
+        <dc:Bounds x="982" y="260" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="888" y="271" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow1_di" bpmnElement="flow1">
+        <di:waypoint x="246" y="278" />
+        <di:waypoint x="300" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_valid_di" bpmnElement="flow_valid">
+        <di:waypoint x="500" y="278" />
+        <di:waypoint x="550" y="278" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="513" y="260" width="24" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_private_di" bpmnElement="flow_private">
+        <di:waypoint x="725" y="253" />
+        <di:waypoint x="725" y="180" />
+        <di:waypoint x="800" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="733" y="214" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_public_di" bpmnElement="flow_public">
+        <di:waypoint x="725" y="303" />
+        <di:waypoint x="725" y="380" />
+        <di:waypoint x="800" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="735" y="339" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_invalid_di" bpmnElement="flow_invalid">
+        <di:waypoint x="475" y="253" />
+        <di:waypoint x="475" y="100" />
+        <di:waypoint x="1000" y="100" />
+        <di:waypoint x="1000" y="260" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="484" y="183" width="32" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_private_to_end_di" bpmnElement="flow_private_to_end">
+        <di:waypoint x="900" y="180" />
+        <di:waypoint x="1000" y="180" />
+        <di:waypoint x="1000" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_public_to_end_di" bpmnElement="flow_public_to_end">
+        <di:waypoint x="900" y="380" />
+        <di:waypoint x="1000" y="380" />
+        <di:waypoint x="1000" y="296" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_to_gateway1_di" bpmnElement="flow_to_gateway1">
+        <di:waypoint x="400" y="278" />
+        <di:waypoint x="450" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_to_gateway2_di" bpmnElement="flow_to_gateway2">
+        <di:waypoint x="650" y="278" />
+        <di:waypoint x="700" y="278" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
