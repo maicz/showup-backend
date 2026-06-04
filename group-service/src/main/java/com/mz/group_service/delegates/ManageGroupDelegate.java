@@ -12,6 +12,23 @@ public class ManageGroupDelegate implements JavaDelegate {
 
     @Override
     public void execute(DelegateExecution execution) throws Exception {
-        log.info("Executing ManageGroupDelegate for process: {}", execution.getProcessInstanceId());
+        String groupName = (String) execution.getVariable("groupName");
+        String description = (String) execution.getVariable("description");
+        String groupTier = (String) execution.getVariable("groupTier");
+        log.info("Executing ManageGroupDelegate for group name: {}", groupName);
+
+        boolean isApproved = true;
+        if (description != null && (description.toLowerCase().contains("spam") || description.toLowerCase().contains("rejected"))) {
+            log.warn("Group description contains forbidden content, rejecting group creation");
+            isApproved = false;
+        }
+
+        if (groupTier == null) {
+            groupTier = "STANDARD";
+        }
+
+        execution.setVariable("isApproved", isApproved);
+        execution.setVariable("groupTier", groupTier);
+        log.info("Approval assessment complete. isApproved={}, groupTier={}", isApproved, groupTier);
     }
 }

@@ -10,8 +10,19 @@ import org.springframework.stereotype.Component;
 public class RejectGroupDelegate implements JavaDelegate {
     private static final Logger log = LoggerFactory.getLogger(RejectGroupDelegate.class);
 
+    private final com.mz.group_service.services.GroupService groupService;
+
+    public RejectGroupDelegate(com.mz.group_service.services.GroupService groupService) {
+        this.groupService = groupService;
+    }
+
     @Override
     public void execute(DelegateExecution execution) throws Exception {
-        log.info("Executing RejectGroupDelegate for process: {}", execution.getProcessInstanceId());
+        Long groupId = (Long) execution.getVariable("groupId");
+        log.warn("Rejecting group creation: ID={}", groupId);
+
+        groupService.updateGroupStatus(groupId, "REJECTED");
+        
+        log.warn("Group {} marked as REJECTED in database", groupId);
     }
 }

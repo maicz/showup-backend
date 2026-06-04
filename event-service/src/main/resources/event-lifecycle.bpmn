@@ -4,7 +4,7 @@
     <bpmn:participant id="event-service-participant" name="event-service" processRef="event-service-process" />
   </bpmn:collaboration>
   <bpmn:process id="event-service-process" name="event-service-process" isExecutable="true" camunda:historyTimeToLive="90">
-    <bpmn:startEvent id="start_event" name="Event Created">
+    <bpmn:startEvent id="start_event" name="Event Created" camunda:asyncBefore="true">
       <bpmn:outgoing>flow1</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:sequenceFlow id="flow1" sourceRef="start_event" targetRef="service_task_1" />

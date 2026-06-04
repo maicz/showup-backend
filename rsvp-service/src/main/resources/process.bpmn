@@ -4,7 +4,7 @@
     <bpmn:participant id="rsvp-service-participant" name="rsvp-service" processRef="rsvp-service-process" />
   </bpmn:collaboration>
   <bpmn:process id="rsvp-service-process" name="rsvp-service-process" isExecutable="true" camunda:historyTimeToLive="90">
-    <bpmn:startEvent id="start_event" name="start">
+    <bpmn:startEvent id="start_event" name="start" camunda:asyncBefore="true">
       <bpmn:outgoing>flow1</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:sequenceFlow id="flow1" sourceRef="start_event" targetRef="service_task_1" />

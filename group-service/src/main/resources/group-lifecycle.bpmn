@@ -4,7 +4,7 @@
     <bpmn:participant id="group-service-participant" name="group-service" processRef="group-lifecycle-process" />
   </bpmn:collaboration>
   <bpmn:process id="group-lifecycle-process" name="group-lifecycle-process" isExecutable="true" camunda:historyTimeToLive="90">
-    <bpmn:startEvent id="start_event" name="Group Created">
+    <bpmn:startEvent id="start_event" name="Group Created" camunda:asyncBefore="true">
       <bpmn:outgoing>flow1</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:sequenceFlow id="flow1" sourceRef="start_event" targetRef="service_task_1" />
@@ -12,66 +12,51 @@
       <bpmn:incoming>flow1</bpmn:incoming>
       <bpmn:outgoing>flow_to_approval_gw</bpmn:outgoing>
     </bpmn:serviceTask>
-    
     <bpmn:sequenceFlow id="flow_to_approval_gw" sourceRef="service_task_1" targetRef="gateway_approval" />
-    
     <bpmn:exclusiveGateway id="gateway_approval" name="Is Approved?" default="flow_rejected">
       <bpmn:incoming>flow_to_approval_gw</bpmn:incoming>
       <bpmn:outgoing>flow_approved</bpmn:outgoing>
       <bpmn:outgoing>flow_rejected</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    
     <bpmn:sequenceFlow id="flow_approved" name="Approved" sourceRef="gateway_approval" targetRef="task_process_activation">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isApproved == true}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    
     <bpmn:serviceTask id="task_process_activation" name="Process Group Activation" camunda:delegateExpression="${processGroupActivationDelegate}">
       <bpmn:incoming>flow_approved</bpmn:incoming>
       <bpmn:outgoing>flow_to_tier_gw</bpmn:outgoing>
     </bpmn:serviceTask>
-    
     <bpmn:sequenceFlow id="flow_to_tier_gw" sourceRef="task_process_activation" targetRef="gateway_tier" />
-    
     <bpmn:exclusiveGateway id="gateway_tier" name="Group Tier?" default="flow_standard">
       <bpmn:incoming>flow_to_tier_gw</bpmn:incoming>
       <bpmn:outgoing>flow_premium</bpmn:outgoing>
       <bpmn:outgoing>flow_standard</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    
     <bpmn:sequenceFlow id="flow_premium" name="Premium" sourceRef="gateway_tier" targetRef="task_configure_premium">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${groupTier == 'PREMIUM'}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    
     <bpmn:serviceTask id="task_configure_premium" name="Configure Premium Features" camunda:delegateExpression="${configurePremiumFeaturesDelegate}">
       <bpmn:incoming>flow_premium</bpmn:incoming>
       <bpmn:outgoing>flow_premium_to_end</bpmn:outgoing>
     </bpmn:serviceTask>
-    
     <bpmn:sequenceFlow id="flow_standard" name="Standard" sourceRef="gateway_tier" targetRef="task_configure_standard" />
-    
     <bpmn:serviceTask id="task_configure_standard" name="Configure Standard Features" camunda:delegateExpression="${configureStandardFeaturesDelegate}">
       <bpmn:incoming>flow_standard</bpmn:incoming>
       <bpmn:outgoing>flow_standard_to_end</bpmn:outgoing>
     </bpmn:serviceTask>
-    
     <bpmn:sequenceFlow id="flow_rejected" name="Rejected" sourceRef="gateway_approval" targetRef="task_reject_group" />
-    
     <bpmn:serviceTask id="task_reject_group" name="Reject Group Creation" camunda:delegateExpression="${rejectGroupDelegate}">
       <bpmn:incoming>flow_rejected</bpmn:incoming>
       <bpmn:outgoing>flow_rejected_to_end</bpmn:outgoing>
     </bpmn:serviceTask>
-    
     <bpmn:sequenceFlow id="flow_rejected_to_end" sourceRef="task_reject_group" targetRef="end_event" />
     <bpmn:sequenceFlow id="flow_premium_to_end" sourceRef="task_configure_premium" targetRef="end_event" />
     <bpmn:sequenceFlow id="flow_standard_to_end" sourceRef="task_configure_standard" targetRef="end_event" />
-    
     <bpmn:endEvent id="end_event" name="Group Processed">
       <bpmn:incoming>flow_rejected_to_end</bpmn:incoming>
       <bpmn:incoming>flow_premium_to_end</bpmn:incoming>
       <bpmn:incoming>flow_standard_to_end</bpmn:incoming>
     </bpmn:endEvent>
   </bpmn:process>
-  
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_group_service">
       <bpmndi:BPMNShape id="Participant_group_di" bpmnElement="group-service-participant" isHorizontal="true">
