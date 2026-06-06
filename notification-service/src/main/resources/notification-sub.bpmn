@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" id="Definitions_notification_sub" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.2.0" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="2.0.0">
+  <bpmn:process id="notification-sub-process" name="Notification Sub Process" isExecutable="true" camunda:historyTimeToLive="90">
+    <bpmn:startEvent id="sub_start" name="Sub Start" camunda:asyncBefore="true">
+      <bpmn:outgoing>flow_sub_start_to_init</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="flow_sub_start_to_init" sourceRef="sub_start" targetRef="sub_init_task" />
+    <bpmn:serviceTask id="sub_init_task" name="Sub Initialize" camunda:asyncBefore="true" camunda:delegateExpression="${subInitDelegate}">
+      <bpmn:incoming>flow_sub_start_to_init</bpmn:incoming>
+      <bpmn:outgoing>flow_sub_init_to_fetch</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_sub_init_to_fetch" sourceRef="sub_init_task" targetRef="fetch_recipient_task" />
+    <bpmn:serviceTask id="fetch_recipient_task" name="Fetch Recipient Info" camunda:asyncBefore="true" camunda:delegateExpression="${fetchRecipientInfoDelegate}">
+      <bpmn:incoming>flow_sub_init_to_fetch</bpmn:incoming>
+      <bpmn:outgoing>flow_fetch_to_gateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_fetch_to_gateway" sourceRef="fetch_recipient_task" targetRef="recipient_type_gateway" />
+    <bpmn:exclusiveGateway id="recipient_type_gateway" name="Recipient Type?" default="flow_to_format_push">
+      <bpmn:incoming>flow_fetch_to_gateway</bpmn:incoming>
+      <bpmn:outgoing>flow_to_format_email</bpmn:outgoing>
+      <bpmn:outgoing>flow_to_format_push</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="flow_to_format_email" name="Email" sourceRef="recipient_type_gateway" targetRef="format_email_task">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${recipient_type == 'email'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_to_format_push" name="Push" sourceRef="recipient_type_gateway" targetRef="format_push_task" />
+    <bpmn:serviceTask id="format_email_task" name="Format Email" camunda:asyncBefore="true" camunda:delegateExpression="${formatEmailDelegate}">
+      <bpmn:incoming>flow_to_format_email</bpmn:incoming>
+      <bpmn:outgoing>flow_email_to_merge</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="format_push_task" name="Format Push" camunda:asyncBefore="true" camunda:delegateExpression="${formatPushDelegate}">
+      <bpmn:incoming>flow_to_format_push</bpmn:incoming>
+      <bpmn:outgoing>flow_push_to_merge</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_email_to_merge" sourceRef="format_email_task" targetRef="merge_branch_gateway" />
+    <bpmn:sequenceFlow id="flow_push_to_merge" sourceRef="format_push_task" targetRef="merge_branch_gateway" />
+    <bpmn:exclusiveGateway id="merge_branch_gateway">
+      <bpmn:incoming>flow_email_to_merge</bpmn:incoming>
+      <bpmn:incoming>flow_push_to_merge</bpmn:incoming>
+      <bpmn:outgoing>flow_merge_to_send</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="flow_merge_to_send" sourceRef="merge_branch_gateway" targetRef="send_communication_task" />
+    <bpmn:serviceTask id="send_communication_task" name="Send Communication" camunda:asyncBefore="true" camunda:delegateExpression="${sendCommunicationDelegate}">
+      <bpmn:incoming>flow_merge_to_send</bpmn:incoming>
+      <bpmn:outgoing>flow_send_to_audit</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_send_to_audit" sourceRef="send_communication_task" targetRef="generate_audit_task" />
+    <bpmn:serviceTask id="generate_audit_task" name="Generate Audit Entry" camunda:asyncBefore="true" camunda:delegateExpression="${generateAuditEntryDelegate}">
+      <bpmn:incoming>flow_send_to_audit</bpmn:incoming>
+      <bpmn:outgoing>flow_audit_to_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_audit_to_end" sourceRef="generate_audit_task" targetRef="sub_end" />
+    <bpmn:endEvent id="sub_end" name="Sub End">
+      <bpmn:incoming>flow_audit_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_sub">
+    <bpmndi:BPMNPlane id="BPMNPlane_sub" bpmnElement="notification-sub-process">
+      <bpmndi:BPMNShape id="SubStart_di" bpmnElement="sub_start">
+        <dc:Bounds x="150" y="150" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_sub_init_di" bpmnElement="sub_init_task">
+        <dc:Bounds x="230" y="128" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_fetch_di" bpmnElement="fetch_recipient_task">
+        <dc:Bounds x="370" y="128" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_recipient_type_di" bpmnElement="recipient_type_gateway" isMarkerVisible="true">
+        <dc:Bounds x="510" y="143" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_format_email_di" bpmnElement="format_email_task">
+        <dc:Bounds x="600" y="50" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_format_push_di" bpmnElement="format_push_task">
+        <dc:Bounds x="600" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_merge_branch_di" bpmnElement="merge_branch_gateway" isMarkerVisible="true">
+        <dc:Bounds x="740" y="143" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_send_di" bpmnElement="send_communication_task">
+        <dc:Bounds x="830" y="128" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_generate_audit_di" bpmnElement="generate_audit_task">
+        <dc:Bounds x="970" y="128" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubEnd_di" bpmnElement="sub_end">
+        <dc:Bounds x="1110" y="150" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_sub_start_to_init_di" bpmnElement="flow_sub_start_to_init">
+        <di:waypoint x="186" y="168" />
+        <di:waypoint x="230" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_sub_init_to_fetch_di" bpmnElement="flow_sub_init_to_fetch">
+        <di:waypoint x="330" y="168" />
+        <di:waypoint x="370" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_fetch_to_gateway_di" bpmnElement="flow_fetch_to_gateway">
+        <di:waypoint x="470" y="168" />
+        <di:waypoint x="510" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_to_format_email_di" bpmnElement="flow_to_format_email">
+        <di:waypoint x="535" y="143" />
+        <di:waypoint x="535" y="90" />
+        <di:waypoint x="600" y="90" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_to_format_push_di" bpmnElement="flow_to_format_push">
+        <di:waypoint x="535" y="193" />
+        <di:waypoint x="535" y="250" />
+        <di:waypoint x="600" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_email_to_merge_di" bpmnElement="flow_email_to_merge">
+        <di:waypoint x="700" y="90" />
+        <di:waypoint x="765" y="90" />
+        <di:waypoint x="765" y="143" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_push_to_merge_di" bpmnElement="flow_push_to_merge">
+        <di:waypoint x="700" y="250" />
+        <di:waypoint x="765" y="250" />
+        <di:waypoint x="765" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_merge_to_send_di" bpmnElement="flow_merge_to_send">
+        <di:waypoint x="790" y="168" />
+        <di:waypoint x="830" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_send_to_audit_di" bpmnElement="flow_send_to_audit">
+        <di:waypoint x="930" y="168" />
+        <di:waypoint x="970" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_audit_to_end_di" bpmnElement="flow_audit_to_end">
+        <di:waypoint x="1070" y="168" />
+        <di:waypoint x="1110" y="168" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

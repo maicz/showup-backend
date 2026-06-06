@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" id="Definitions_notification_main" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.2.0" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="2.0.0">
+  <bpmn:process id="notification-main-process" name="Notification Main Process" isExecutable="true" camunda:historyTimeToLive="90">
+    <bpmn:startEvent id="start_event" name="Start" camunda:asyncBefore="true">
+      <bpmn:outgoing>flow_start_to_init</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="flow_start_to_init" sourceRef="start_event" targetRef="init_task" />
+    <bpmn:serviceTask id="init_task" name="Initialize Audit Log" camunda:asyncBefore="true" camunda:delegateExpression="${initAuditLogDelegate}">
+      <bpmn:incoming>flow_start_to_init</bpmn:incoming>
+      <bpmn:outgoing>flow_init_to_mi_sub</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_init_to_mi_sub" sourceRef="init_task" targetRef="mi_expanded_sub_process" />
+    <bpmn:subProcess id="mi_expanded_sub_process" name="Multi-Instance Subprocess" camunda:asyncBefore="true">
+      <bpmn:incoming>flow_init_to_mi_sub</bpmn:incoming>
+      <bpmn:outgoing>flow_mi_sub_to_end</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:asyncBefore="true">
+        <bpmn:loopCardinality xsi:type="bpmn:tFormalExpression">3</bpmn:loopCardinality>
+      </bpmn:multiInstanceLoopCharacteristics>
+      <bpmn:startEvent id="sub_proc_start" name="Start Instance">
+        <bpmn:outgoing>flow_sub_proc_start_to_generate</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:sequenceFlow id="flow_sub_proc_start_to_generate" sourceRef="sub_proc_start" targetRef="generate_data_task" />
+      <bpmn:serviceTask id="generate_data_task" name="Generate Notification Data" camunda:asyncBefore="true" camunda:delegateExpression="${generateNotificationDataDelegate}">
+        <bpmn:incoming>flow_sub_proc_start_to_generate</bpmn:incoming>
+        <bpmn:outgoing>flow_generate_to_call_sub</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="flow_generate_to_call_sub" sourceRef="generate_data_task" targetRef="call_sub_process" />
+      <bpmn:callActivity id="call_sub_process" name="Call Sub Process" camunda:asyncBefore="true" calledElement="notification-sub-process">
+        <bpmn:extensionElements>
+          <camunda:out source="audit_log" target="comm_audit_log" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>flow_generate_to_call_sub</bpmn:incoming>
+        <bpmn:outgoing>flow_call_sub_to_merge</bpmn:outgoing>
+      </bpmn:callActivity>
+      <bpmn:sequenceFlow id="flow_call_sub_to_merge" sourceRef="call_sub_process" targetRef="merge_task" />
+      <bpmn:serviceTask id="merge_task" name="Merge Audit Logs" camunda:asyncBefore="true" camunda:delegateExpression="${mergeAuditLogsDelegate}">
+        <bpmn:incoming>flow_call_sub_to_merge</bpmn:incoming>
+        <bpmn:outgoing>flow_merge_to_sub_proc_end</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="flow_merge_to_sub_proc_end" sourceRef="merge_task" targetRef="sub_proc_end" />
+      <bpmn:endEvent id="sub_proc_end" name="End Instance">
+        <bpmn:incoming>flow_merge_to_sub_proc_end</bpmn:incoming>
+      </bpmn:endEvent>
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="flow_mi_sub_to_end" sourceRef="mi_expanded_sub_process" targetRef="end_event" />
+    <bpmn:endEvent id="end_event" name="End">
+      <bpmn:incoming>flow_mi_sub_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_main">
+    <bpmndi:BPMNPlane id="BPMNPlane_main" bpmnElement="notification-main-process">
+      <bpmndi:BPMNShape id="StartEvent_di" bpmnElement="start_event">
+        <dc:Bounds x="180" y="190" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_init_di" bpmnElement="init_task">
+        <dc:Bounds x="260" y="168" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubProcess_mi_di" bpmnElement="mi_expanded_sub_process" isExpanded="true">
+        <dc:Bounds x="410" y="80" width="700" height="250" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubProcStart_di" bpmnElement="sub_proc_start">
+        <dc:Bounds x="440" y="190" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_generate_di" bpmnElement="generate_data_task">
+        <dc:Bounds x="520" y="168" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_sub_di" bpmnElement="call_sub_process">
+        <dc:Bounds x="680" y="168" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_merge_di" bpmnElement="merge_task">
+        <dc:Bounds x="840" y="168" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubProcEnd_di" bpmnElement="sub_proc_end">
+        <dc:Bounds x="1000" y="190" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_di" bpmnElement="end_event">
+        <dc:Bounds x="1160" y="190" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_start_to_init_di" bpmnElement="flow_start_to_init">
+        <di:waypoint x="216" y="208" />
+        <di:waypoint x="260" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_init_to_mi_sub_di" bpmnElement="flow_init_to_mi_sub">
+        <di:waypoint x="360" y="208" />
+        <di:waypoint x="410" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_mi_sub_to_end_di" bpmnElement="flow_mi_sub_to_end">
+        <di:waypoint x="1110" y="208" />
+        <di:waypoint x="1160" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_sub_proc_start_to_generate_di" bpmnElement="flow_sub_proc_start_to_generate">
+        <di:waypoint x="476" y="208" />
+        <di:waypoint x="520" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_generate_to_call_sub_di" bpmnElement="flow_generate_to_call_sub">
+        <di:waypoint x="620" y="208" />
+        <di:waypoint x="680" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_call_sub_to_merge_di" bpmnElement="flow_call_sub_to_merge">
+        <di:waypoint x="780" y="208" />
+        <di:waypoint x="840" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_merge_to_sub_proc_end_di" bpmnElement="flow_merge_to_sub_proc_end">
+        <di:waypoint x="940" y="208" />
+        <di:waypoint x="1000" y="208" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

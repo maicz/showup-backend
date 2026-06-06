@@ -1,0 +1,35 @@
+package com.mz.user_service.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+public class UserLoginRequest {
+
+    @NotBlank(message = "Username or Email is required")
+    private String usernameOrEmail;
+
+    @NotBlank(message = "Password is required")
+    private String password;
+
+    public UserLoginRequest() {}
+
+    public UserLoginRequest(String usernameOrEmail, String password) {
+        this.usernameOrEmail = usernameOrEmail;
+        this.password = password;
+    }
+
+    public String getUsernameOrEmail() {
+        return usernameOrEmail;
+    }
+
+    public void setUsernameOrEmail(String usernameOrEmail) {
+        this.usernameOrEmail = usernameOrEmail;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}

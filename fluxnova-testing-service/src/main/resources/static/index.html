@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluxnova Load Testing Hub</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="grid-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div>
+                <div class="logo-area">
+                    <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+                    <h2>Flux<span>nova</span></h2>
+                </div>
+                <nav class="nav-menu">
+                    <a href="#" class="nav-item active">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        Dashboard
+                    </a>
+                    <a href="#" class="nav-item">
+                        <i class="fa-solid fa-circle-play"></i>
+                        Active Runs
+                    </a>
+                    <a href="#" class="nav-item">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        History
+                    </a>
+                </nav>
+            </div>
+            <div class="sidebar-footer">
+                <p>System Status</p>
+                <div class="status-indicator">
+                    <span class="pulse-dot green"></span>
+                    <span>All systems operational</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-title">
+                    <h1>Load Testing Hub</h1>
+                    <p>Programmatically trigger and monitor workflow test cases</p>
+                </div>
+                <div>
+                    <button id="btn-refresh-stats" class="btn btn-secondary">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        Refresh Dashboard
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stats Grid -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fa-solid fa-diagram-project"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Process Definitions</h3>
+                        <div id="stat-definitions" class="stat-value">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Tests Executed</h3>
+                        <div id="stat-tests-run" class="stat-value">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Successes</h3>
+                        <div id="stat-successes" class="stat-value">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Failures</h3>
+                        <div id="stat-failures" class="stat-value">0</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workspace Grid -->
+            <div class="workspace-grid">
+                <!-- Left panel: Launcher Form -->
+                <section class="panel">
+                    <h2 class="panel-title">Launcher</h2>
+                    <form id="load-test-form">
+                        <div class="form-group">
+                            <label for="process-select">Target Process Definition</label>
+                            <select id="process-select" required>
+                                <option value="" disabled selected>Select a process...</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col">
+                                <label for="instance-count">Execution Count (Instances)</label>
+                                <input type="number" id="instance-count" value="10" min="1" max="1000" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="process-variables">Process Variables (JSON format)</label>
+                            <textarea id="process-variables" rows="6" placeholder='{ "key": "value" }'></textarea>
+                        </div>
+                        <button type="submit" id="btn-launch" class="btn btn-primary btn-block">
+                            <span class="btn-text">Run Load Test</span>
+                            <span class="loader hidden"></span>
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Right panel: Monitor -->
+                <section class="panel">
+                    <h2 class="panel-title">Monitor</h2>
+                    
+                    <!-- Empty State -->
+                    <div id="monitor-empty-state" class="monitor-empty">
+                        <div class="monitor-empty-icon">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        <p>No active load tests running.<br>Select a process and launch it to begin.</p>
+                    </div>
+
+                    <!-- Active State -->
+                    <div id="monitor-active-state" class="monitor-active hidden">
+                        <div class="progress-container">
+                            <svg class="progress-ring" width="160" height="160">
+                                <circle class="progress-ring__circle" stroke="#8b5cf6" stroke-width="8" fill="transparent" r="70" cx="80" cy="80" />
+                            </svg>
+                            <div class="progress-text">
+                                <span id="progress-percentage">0%</span>
+                                <small>Progress</small>
+                            </div>
+                        </div>
+                        <div class="test-details">
+                            <div class="detail-row">
+                                <span>Process Key:</span>
+                                <strong id="monitor-key">-</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Success Ratio:</span>
+                                <strong id="monitor-ratio">0 / 0</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Status:</span>
+                                <span id="monitor-status" class="badge badge-active">IDLE</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- History Panel -->
+            <section class="panel">
+                <h2 class="panel-title">Execution History</h2>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Test ID</th>
+                                <th>Process Key</th>
+                                <th>Requested</th>
+                                <th>Successes</th>
+                                <th>Failures</th>
+                                <th>Duration</th>
+                                <th>Started At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-tbody">
+                            <tr>
+                                <td colspan="7" class="text-center">No tests have been executed yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Main JS -->
+    <script src="/js/app.js"></script>
+</body>
+</html>
