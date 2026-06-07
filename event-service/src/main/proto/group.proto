@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.mz.grpc";
+option java_outer_classname = "GroupProto";
+
+package group;
+
+service GroupGrpcService {
+  rpc VerifyMembership(MembershipRequest) returns (MembershipResponse);
+}
+
+message MembershipRequest {
+  int64 groupId = 1;
+  int64 userId = 2;
+}
+
+message MembershipResponse {
+  bool isMember = 1;
+  string role = 2; // e.g. MEMBER, ADMIN, or NONE
+}
