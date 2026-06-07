@@ -34,8 +34,9 @@ The system consists of independent Maven projects configured to run concurrently
 | **[fluxnova-webapp-component](file:///Users/mihaiz/dev/projects/showup-app/showup-backend/fluxnova-webapp-component)** | `8080` | Exposes the central Fluxnova Cockpit, task list, and Admin console alongside REST APIs |
 | **[fluxnova-cleanup-component](file:///Users/mihaiz/dev/projects/showup-app/showup-backend/fluxnova-cleanup-component)** | *(None)* | Web-less runner using the Fluxnova Java API to periodically purge older deployments and stalled instances |
 | **[fluxnova-testing-service](file:///Users/mihaiz/dev/projects/showup-app/showup-backend/fluxnova-testing-service)** | `8089` | Dedicated load test hub with a dashboard UI to programmatically launch and benchmark workflows |
-| *api-gateway* | — | **[Planned]** Single entry point, auth token validation, routing |
-| *auth-service* | — | **[Planned]** JWT/OAuth2 issuing (custom Spring Authorization Server) |
+| **[api-gateway](file:///Users/mihaiz/dev/projects/showup-app/showup-backend/api-gateway)** | `8090` | Single entry point, proxy routing |
+| **[auth-service](file:///Users/mihaiz/dev/projects/showup-app/showup-backend/auth-service)** | `8091` | JWT/OAuth2 token generation and token validation |
+
 
 ---
 
@@ -81,7 +82,18 @@ Event created / updated
 
 ---
 
+## Synchronous gRPC Communications
+
+For high-performance, low-latency synchronous inter-service communication, services use gRPC:
+
+| Client Service | Server Service | RPC Method | Port | Responsibility |
+| :--- | :--- | :--- | :---: | :--- |
+| **[event-service](file:///Users/mihaiz/dev/projects/showup-app/showup-backend/event-service)** | **[group-service](file:///Users/mihaiz/dev/projects/showup-app/showup-backend/group-service)** | `VerifyMembership` | `9082` | Verify that the event creator has membership/permissions in the target group |
+
+---
+
 ## Database Strategy
+
 
 In local development ([docker-compose.yml](file:///Users/mihaiz/dev/projects/showup-app/showup-backend/docker-compose.yml)), databases are hosted containerized.
 
@@ -91,6 +103,7 @@ In local development ([docker-compose.yml](file:///Users/mihaiz/dev/projects/sho
 | Service | Logical Database/Schema | DB Tech |
 |---|---|---|
 | **user-service** | `users_db` | PostgreSQL |
+| **auth-service** | `users_db` (shares with `user-service`) | PostgreSQL |
 | **group-service** | `groups_db` | PostgreSQL |
 | **event-service** | `events_db` | PostgreSQL |
 | **rsvp-service** | `rsvp_db` | PostgreSQL |

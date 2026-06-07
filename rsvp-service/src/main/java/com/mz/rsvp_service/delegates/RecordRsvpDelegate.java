@@ -12,6 +12,14 @@ public class RecordRsvpDelegate implements JavaDelegate {
 
     @Override
     public void execute(DelegateExecution execution) throws Exception {
-        log.info("Executing RecordRsvpDelegate for process: {}", execution.getProcessInstanceId());
+        Long rsvpId = (Long) execution.getVariable("rsvpId");
+        Long eventId = (Long) execution.getVariable("eventId");
+        Long userId = (Long) execution.getVariable("userId");
+        String status = (String) execution.getVariable("status");
+
+        log.info("BPMN: RecordRsvpDelegate successfully processed RSVP. ID: {}, Event: {}, User: {}, Status: {}", 
+                rsvpId, eventId, userId, status);
+        
+        execution.setVariable("rsvpRecorded", true);
     }
 }

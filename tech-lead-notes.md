@@ -29,3 +29,32 @@
 - [x] secure group-service endpoints so only authenticated users (extracted from JWT) can create groups or manage memberships
 - [x] integrate group operations with group-lifecycle-process BPMN workflow
 - [x] create comprehensive integration tests for group-service
+
+## implement event service features and persistence [COMPLETED]
+- [x] add spring-boot-starter-web, spring-boot-starter-data-jpa, spring-boot-starter-validation, spring-boot-starter-security, and jwt dependency to event-service
+- [x] create Event database entity and repository
+- [x] implement REST controllers for event creation and retrieval
+- [x] secure event-service endpoints using shared JWT validation
+- [x] implement BPMN delegates logic for event metadata validation (ProcessEventDelegate), permission checking, private setup, and public publishing
+- [x] create comprehensive integration tests for event-service
+
+## implement rsvp service features and persistence [COMPLETED]
+- [x] add spring-boot-starter-web, spring-boot-starter-data-jpa, spring-boot-starter-validation, spring-boot-starter-security, and jwt dependency to rsvp-service
+- [x] create Rsvp database entity and repository
+- [x] implement REST controllers for RSVP creation/update, event RSVP counts summary, and user RSVP list
+- [x] secure rsvp-service endpoints using shared JWT validation
+- [x] implement recordRsvpDelegate logic for recording RSVPs in the BPMN process
+- [x] create comprehensive integration tests for rsvp-service
+
+## implement api gateway and authentication service [COMPLETED]
+- [x] create dedicated api-gateway service using Spring Cloud Gateway to proxy requests to appropriate microservices
+- [x] create dedicated auth-service validating credentials and generating JWT tokens
+- [x] implement token validation endpoint (/api/auth/validate) in auth-service
+- [x] create comprehensive unit tests for auth-service and api-gateway
+
+## implement synchronous grpc communication [COMPLETED]
+- [x] define group.proto service contract for verifying user group membership
+- [x] configure gRPC server in group-service on port 9082 and implement GroupGrpcServiceImpl
+- [x] configure gRPC client in event-service targeting group-service gRPC server
+- [x] integrate gRPC call in VerifyEventPermissionsDelegate inside event-service to verify creator permissions dynamically
+- [x] write gRPC service unit tests in group-service (GroupGrpcServiceTest)
