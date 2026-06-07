@@ -3,6 +3,15 @@ package com.mz.group_service.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class GroupCreateRequest {
 
     @NotBlank(message = "Group name is required")
@@ -13,36 +22,4 @@ public class GroupCreateRequest {
     private String description;
 
     private String tier = "STANDARD"; // default tier
-
-    public GroupCreateRequest() {}
-
-    public GroupCreateRequest(String name, String description, String tier) {
-        this.name = name;
-        this.description = description;
-        this.tier = tier;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getTier() {
-        return tier;
-    }
-
-    public void setTier(String tier) {
-        this.tier = tier;
-    }
 }

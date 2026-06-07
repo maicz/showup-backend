@@ -6,15 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
+
 @Component("processGroupActivationDelegate")
+@RequiredArgsConstructor
 public class ProcessGroupActivationDelegate implements JavaDelegate {
     private static final Logger log = LoggerFactory.getLogger(ProcessGroupActivationDelegate.class);
 
     private final com.mz.group_service.services.GroupService groupService;
-
-    public ProcessGroupActivationDelegate(com.mz.group_service.services.GroupService groupService) {
-        this.groupService = groupService;
-    }
 
     @Override
     public void execute(DelegateExecution execution) throws Exception {

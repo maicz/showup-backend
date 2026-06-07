@@ -3,10 +3,17 @@ package com.mz.group_service.entities;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 @Entity
 @Table(name = "memberships", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"group_id", "user_id"})
 })
+@Getter
+@Setter
+@NoArgsConstructor
 public class Membership {
 
     @Id
@@ -30,52 +37,9 @@ public class Membership {
         this.joinedAt = Instant.now();
     }
 
-    public Membership() {}
-
     public Membership(Long groupId, Long userId, String role) {
         this.groupId = groupId;
         this.userId = userId;
         this.role = role;
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getGroupId() {
-        return groupId;
-    }
-
-    public void setGroupId(Long groupId) {
-        this.groupId = groupId;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public Instant getJoinedAt() {
-        return joinedAt;
-    }
-
-    public void setJoinedAt(Instant joinedAt) {
-        this.joinedAt = joinedAt;
     }
 }

@@ -11,15 +11,14 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.Optional;
 
+import lombok.RequiredArgsConstructor;
+
 @Component("processEventDelegate")
+@RequiredArgsConstructor
 public class ProcessEventDelegate implements JavaDelegate {
     private static final Logger log = LoggerFactory.getLogger(ProcessEventDelegate.class);
 
     private final EventRepository eventRepository;
-
-    public ProcessEventDelegate(EventRepository eventRepository) {
-        this.eventRepository = eventRepository;
-    }
 
     @Override
     public void execute(DelegateExecution execution) throws Exception {

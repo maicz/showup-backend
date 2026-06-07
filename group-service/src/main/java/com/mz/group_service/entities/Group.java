@@ -3,8 +3,15 @@ package com.mz.group_service.entities;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 @Entity
 @Table(name = "groups")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Group {
 
     @Id
@@ -34,70 +41,11 @@ public class Group {
         this.createdAt = Instant.now();
     }
 
-    public Group() {}
-
     public Group(String name, String description, Long creatorId, String status, String tier) {
         this.name = name;
         this.description = description;
         this.creatorId = creatorId;
         this.status = status;
         this.tier = tier;
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Long getCreatorId() {
-        return creatorId;
-    }
-
-    public void setCreatorId(Long creatorId) {
-        this.creatorId = creatorId;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getTier() {
-        return tier;
-    }
-
-    public void setTier(String tier) {
-        this.tier = tier;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
     }
 }

@@ -19,21 +19,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class GroupServiceImpl implements GroupService {
     private static final Logger log = LoggerFactory.getLogger(GroupServiceImpl.class);
 
     private final GroupRepository groupRepository;
     private final MembershipRepository membershipRepository;
     private final RuntimeService runtimeService;
-
-    public GroupServiceImpl(GroupRepository groupRepository,
-                            MembershipRepository membershipRepository,
-                            RuntimeService runtimeService) {
-        this.groupRepository = groupRepository;
-        this.membershipRepository = membershipRepository;
-        this.runtimeService = runtimeService;
-    }
 
     @Override
     @Transactional

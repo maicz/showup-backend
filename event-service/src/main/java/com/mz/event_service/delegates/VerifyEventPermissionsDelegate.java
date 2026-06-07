@@ -14,7 +14,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+import lombok.RequiredArgsConstructor;
+
 @Component("verifyEventPermissionsDelegate")
+@RequiredArgsConstructor
 public class VerifyEventPermissionsDelegate implements JavaDelegate {
     private static final Logger log = LoggerFactory.getLogger(VerifyEventPermissionsDelegate.class);
 
@@ -22,10 +25,6 @@ public class VerifyEventPermissionsDelegate implements JavaDelegate {
 
     @GrpcClient("groupService")
     private GroupGrpcServiceGrpc.GroupGrpcServiceBlockingStub groupServiceStub;
-
-    public VerifyEventPermissionsDelegate(EventRepository eventRepository) {
-        this.eventRepository = eventRepository;
-    }
 
     @Override
     public void execute(DelegateExecution execution) throws Exception {

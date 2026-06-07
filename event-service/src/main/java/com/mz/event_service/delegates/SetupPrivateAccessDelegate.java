@@ -10,15 +10,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+import lombok.RequiredArgsConstructor;
+
 @Component("setupPrivateAccessDelegate")
+@RequiredArgsConstructor
 public class SetupPrivateAccessDelegate implements JavaDelegate {
     private static final Logger log = LoggerFactory.getLogger(SetupPrivateAccessDelegate.class);
 
     private final EventRepository eventRepository;
-
-    public SetupPrivateAccessDelegate(EventRepository eventRepository) {
-        this.eventRepository = eventRepository;
-    }
 
     @Override
     public void execute(DelegateExecution execution) throws Exception {

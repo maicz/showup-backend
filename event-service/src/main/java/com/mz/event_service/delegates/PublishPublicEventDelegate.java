@@ -10,15 +10,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+import lombok.RequiredArgsConstructor;
+
 @Component("publishPublicEventDelegate")
+@RequiredArgsConstructor
 public class PublishPublicEventDelegate implements JavaDelegate {
     private static final Logger log = LoggerFactory.getLogger(PublishPublicEventDelegate.class);
 
     private final EventRepository eventRepository;
-
-    public PublishPublicEventDelegate(EventRepository eventRepository) {
-        this.eventRepository = eventRepository;
-    }
 
     @Override
     public void execute(DelegateExecution execution) throws Exception {

@@ -15,16 +15,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/groups")
+@RequiredArgsConstructor
 public class GroupController {
     private static final Logger log = LoggerFactory.getLogger(GroupController.class);
 
     private final GroupService groupService;
-
-    public GroupController(GroupService groupService) {
-        this.groupService = groupService;
-    }
 
     @PostMapping
     public ResponseEntity<Group> createGroup(
